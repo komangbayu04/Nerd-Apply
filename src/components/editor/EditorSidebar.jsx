@@ -53,7 +53,7 @@ export default function EditorSidebar({ template }) {
 
       {/* Tab content */}
       <div className="flex-1 overflow-y-auto p-4">
-        {activeTab === 'text' && <TextEditor />}
+        {activeTab === 'text' && <TextEditor template={template} />}
         {activeTab === 'assets' && <AssetPicker activeTheme={activeTheme} />}
         {activeTab === 'theme' && (
           <ThemeSwitcher allowedThemes={template?.themes || ['cream', 'dark', 'coral']} />

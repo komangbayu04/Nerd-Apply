@@ -1,4 +1,62 @@
 export const templates = [
+  // ── Template 1: Welcome to the Team (reference design) ─────────────────────
+  {
+    id: 'social-welcome-team-01',
+    name: 'Welcome to the Team',
+    format: 'square',
+    theme: 'Announcement',
+    status: 'active',
+    defaultTheme: 'coral',           // opens in coral callout by default
+    dimensions: { width: 1080, height: 1080 },
+    themes: ['coral', 'dark', 'cream'],
+    layers: [
+      // 1. Full-bleed background (coral from theme)
+      { type: 'background' },
+
+      // 2. Decorative geometry (slightly darker overlays — visible at edges)
+      { type: 'rect', x: 700, y: 340, w: 380, h: 280,  fillColor: 'rgba(0,0,0,0.14)', locked: true },
+      { type: 'rect', x: 820, y: 200, w: 260, h: 130,  fillColor: 'rgba(0,0,0,0.10)', locked: true },
+      { type: 'rect', x:   0, y: 460, w: 220, h: 380,  fillColor: 'rgba(0,0,0,0.10)', locked: true },
+
+      // 3. Headline text (white serif, behind headshot in z-order)
+      {
+        type: 'text', field: 'headline',
+        x: 60, y: 52, w: 960,
+        fontStyle: 'displayLg', align: 'left',
+        textColorToken: 'onPrimary',   // always white regardless of theme
+        locked: false,
+      },
+
+      // 4. Large headshot — takes up most of canvas, sits IN FRONT of headline
+      { type: 'image', slot: 'headshot', x: 210, y: 80, w: 660, h: 1000, shape: 'rect', locked: false },
+
+      // 5. Dark name card (bottom right) — overlaid on headshot
+      { type: 'rect', x: 490, y: 844, w: 550, h: 196, fillColor: 'rgba(24,23,21,0.92)', radius: 0, locked: true },
+
+      // 6. Person name on card
+      {
+        type: 'text', field: 'personName',
+        x: 514, y: 870, w: 502,
+        fontStyle: 'displaySm', align: 'left',
+        textColorToken: 'onDark',
+        locked: false,
+      },
+
+      // 7. Person role on card
+      {
+        type: 'text', field: 'personRole',
+        x: 514, y: 972, w: 502,
+        fontStyle: 'bodyMd', align: 'left',
+        textColorToken: 'onDarkSoft',
+        locked: false,
+      },
+
+      // 8. Brand logo — bottom left, white
+      { type: 'brandLogo', x: 56, y: 920, color: '#ffffff', locked: true },
+    ],
+  },
+
+  // ── Template 2 ──────────────────────────────────────────────────────────────
   {
     id: 'social-announcement-01',
     name: 'Social Announcement',

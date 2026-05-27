@@ -16,6 +16,8 @@ const useEditorStore = create((set, get) => ({
     body: '',
     cta: 'Learn More',
     date: '',
+    personName: '',
+    personRole: '',
   },
   setTextField: (field, value) => set((state) => ({
     textFields: { ...state.textFields, [field]: value }
@@ -25,21 +27,22 @@ const useEditorStore = create((set, get) => ({
   selectedHeadshot: null,
   setSelectedHeadshot: (headshot) => set({ selectedHeadshot: headshot }),
 
+  // Custom uploaded photo (dataURL or blob URL)
+  customHeadshotUrl: null,
+  setCustomHeadshotUrl: (url) => set({ customHeadshotUrl: url }),
+
   selectedLogo: null,
   setSelectedLogo: (logo) => set({ selectedLogo: logo }),
 
   selectedBadge: null,
   setSelectedBadge: (badge) => set({ selectedBadge: badge }),
 
-  // Canvas fabric instance ref
-  fabricCanvas: null,
-  setFabricCanvas: (canvas) => set({ fabricCanvas: canvas }),
-
   // Reset editor state
   resetEditor: () => set({
     activeTheme: 'cream',
-    textFields: { headline: '', subheadline: '', body: '', cta: 'Learn More', date: '' },
+    textFields: { headline: '', subheadline: '', body: '', cta: 'Learn More', date: '', personName: '', personRole: '' },
     selectedHeadshot: null,
+    customHeadshotUrl: null,
     selectedLogo: null,
     selectedBadge: null,
   }),

@@ -2,134 +2,152 @@ import React, { useMemo } from 'react'
 import { tokens } from '../../assets/tokens.js'
 import useEditorStore from '../../store/editorStore.js'
 
-// Map colorToken string to actual color value
+// Resolve a color token to actual CSS color
 function resolveColor(colorToken, themeColors) {
   if (!colorToken) return 'transparent'
-  // Check theme tokens first
   if (colorToken === 'canvas' || colorToken === 'surface') return themeColors.surface
-  // Check brand tokens
   if (tokens.colors[colorToken]) return tokens.colors[colorToken]
-  // Fallback direct value
-  return colorToken
+  return colorToken // pass-through for direct values like rgba(...)
 }
 
-// Map fontStyle token to CSS
+// Map fontStyle token to scaled CSS properties
 function resolveFontStyle(fontStyle, themeColors) {
   const display = tokens.typography.families.display
   const body = tokens.typography.families.body
-
   const map = {
-    displayXl:   { fontFamily: display, fontSize: '64px', fontWeight: 400, lineHeight: 1.05, letterSpacing: '-1.5px', color: themeColors.headline },
-    displayLg:   { fontFamily: display, fontSize: '48px', fontWeight: 400, lineHeight: 1.10, letterSpacing: '-1px',   color: themeColors.headline },
-    displayMd:   { fontFamily: display, fontSize: '36px', fontWeight: 400, lineHeight: 1.15, letterSpacing: '-0.5px', color: themeColors.headline },
-    displaySm:   { fontFamily: display, fontSize: '28px', fontWeight: 400, lineHeight: 1.20, letterSpacing: '-0.3px', color: themeColors.headline },
-    titleLg:     { fontFamily: body,    fontSize: '22px', fontWeight: 500, lineHeight: 1.30, letterSpacing: '0',      color: themeColors.headline },
-    titleMd:     { fontFamily: body,    fontSize: '18px', fontWeight: 500, lineHeight: 1.40, letterSpacing: '0',      color: themeColors.headline },
-    titleSm:     { fontFamily: body,    fontSize: '16px', fontWeight: 500, lineHeight: 1.40, letterSpacing: '0',      color: themeColors.headline },
-    bodyMd:      { fontFamily: body,    fontSize: '16px', fontWeight: 400, lineHeight: 1.55, letterSpacing: '0',      color: themeColors.body },
-    bodySm:      { fontFamily: body,    fontSize: '14px', fontWeight: 400, lineHeight: 1.55, letterSpacing: '0',      color: themeColors.body },
-    caption:     { fontFamily: body,    fontSize: '13px', fontWeight: 500, lineHeight: 1.40, letterSpacing: '0',      color: themeColors.body },
-    captionUc:   { fontFamily: body,    fontSize: '12px', fontWeight: 500, lineHeight: 1.40, letterSpacing: '1.5px',  textTransform: 'uppercase', color: themeColors.body },
-    button:      { fontFamily: body,    fontSize: '14px', fontWeight: 500, lineHeight: 1.00, letterSpacing: '0',      color: themeColors.ctaText },
+    displayXl:  { fontFamily: display, fontSize: 64, fontWeight: 400, lineHeight: 1.05, letterSpacing: '-1.5px', color: themeColors.headline },
+    displayLg:  { fontFamily: display, fontSize: 48, fontWeight: 400, lineHeight: 1.10, letterSpacing: '-1px',   color: themeColors.headline },
+    displayMd:  { fontFamily: display, fontSize: 36, fontWeight: 400, lineHeight: 1.15, letterSpacing: '-0.5px', color: themeColors.headline },
+    displaySm:  { fontFamily: display, fontSize: 28, fontWeight: 400, lineHeight: 1.20, letterSpacing: '-0.3px', color: themeColors.headline },
+    titleLg:    { fontFamily: body,    fontSize: 22, fontWeight: 500, lineHeight: 1.30, letterSpacing: '0',      color: themeColors.headline },
+    titleMd:    { fontFamily: body,    fontSize: 18, fontWeight: 500, lineHeight: 1.40, letterSpacing: '0',      color: themeColors.headline },
+    titleSm:    { fontFamily: body,    fontSize: 16, fontWeight: 500, lineHeight: 1.40, letterSpacing: '0',      color: themeColors.headline },
+    bodyMd:     { fontFamily: body,    fontSize: 16, fontWeight: 400, lineHeight: 1.55, letterSpacing: '0',      color: themeColors.body },
+    bodySm:     { fontFamily: body,    fontSize: 14, fontWeight: 400, lineHeight: 1.55, letterSpacing: '0',      color: themeColors.body },
+    caption:    { fontFamily: body,    fontSize: 13, fontWeight: 500, lineHeight: 1.40, letterSpacing: '0',      color: themeColors.body },
+    captionUc:  { fontFamily: body,    fontSize: 12, fontWeight: 500, lineHeight: 1.40, letterSpacing: '1.5px',  textTransform: 'uppercase', color: themeColors.body },
+    button:     { fontFamily: body,    fontSize: 14, fontWeight: 500, lineHeight: 1.00, letterSpacing: '0',      color: themeColors.ctaText },
   }
   return map[fontStyle] || map.bodyMd
 }
 
-function CanvasLayer({ layer, scale, themeColors, textFields, selectedHeadshot, selectedLogo, selectedBadge }) {
-  const scalePx = (v) => Math.round(v * scale)
+function CanvasLayer({
+  layer, scale, themeColors,
+  textFields, selectedHeadshot, customHeadshotUrl,
+  selectedLogo, selectedBadge,
+}) {
+  const sp = (v) => Math.round((v || 0) * scale)
 
   const baseStyle = {
     position: 'absolute',
-    left: scalePx(layer.x || 0),
-    top: scalePx(layer.y || 0),
-    width: layer.w !== undefined ? scalePx(layer.w) : undefined,
-    height: layer.h !== undefined ? scalePx(layer.h) : undefined,
+    left:   sp(layer.x),
+    top:    sp(layer.y),
+    width:  layer.w !== undefined ? sp(layer.w) : undefined,
+    height: layer.h !== undefined ? sp(layer.h) : undefined,
   }
 
+  // ── Background ────────────────────────────────────────────────────
   if (layer.type === 'background') {
     return (
-      <div
-        style={{
-          position: 'absolute', inset: 0,
-          backgroundColor: resolveColor('canvas', themeColors),
-        }}
-      />
+      <div style={{ position: 'absolute', inset: 0, backgroundColor: themeColors.surface }} />
     )
   }
 
+  // ── Rect (solid or semi-transparent) ──────────────────────────────
   if (layer.type === 'rect') {
-    const bgColor = resolveColor(layer.colorToken, themeColors)
+    // fillColor = direct CSS value (supports rgba); colorToken = token lookup
+    const bg = layer.fillColor
+      ? layer.fillColor
+      : resolveColor(layer.colorToken, themeColors)
     return (
-      <div style={{ ...baseStyle, backgroundColor: bgColor }} />
+      <div style={{
+        ...baseStyle,
+        backgroundColor: bg,
+        opacity: layer.opacity !== undefined ? layer.opacity : 1,
+        borderRadius: layer.radius ? sp(layer.radius) : 0,
+      }} />
     )
   }
 
+  // ── Divider line ──────────────────────────────────────────────────
   if (layer.type === 'divider') {
     return (
       <div style={{
         position: 'absolute',
-        left: scalePx(layer.x || 0),
-        top: scalePx(layer.y || 0),
-        width: scalePx(layer.w || 100),
-        height: Math.max(1, scalePx(1)),
+        left: sp(layer.x),
+        top:  sp(layer.y),
+        width: sp(layer.w || 100),
+        height: Math.max(1, sp(1)),
         backgroundColor: resolveColor(layer.colorToken, themeColors),
       }} />
     )
   }
 
+  // ── Text ──────────────────────────────────────────────────────────
   if (layer.type === 'text') {
-    const fieldVal = textFields[layer.field] || ''
-    if (!fieldVal) return null
-    const fontStyle = resolveFontStyle(layer.fontStyle, themeColors)
-    // Scale font sizes down
-    const scaledFontStyle = {
-      ...fontStyle,
-      fontSize: fontStyle.fontSize ? `${parseFloat(fontStyle.fontSize) * scale}px` : undefined,
+    const val = textFields[layer.field] || ''
+    if (!val) return null
+    const style = resolveFontStyle(layer.fontStyle, themeColors)
+
+    // textColorToken overrides the theme-derived color
+    let color = style.color
+    if (layer.textColorToken) {
+      color = resolveColor(layer.textColorToken, themeColors)
     }
+
     return (
       <div style={{
         ...baseStyle,
-        ...scaledFontStyle,
-        textAlign: layer.align || 'left',
-        overflow: 'hidden',
-        wordBreak: 'break-word',
+        fontFamily:    style.fontFamily,
+        fontSize:      `${style.fontSize * scale}px`,
+        fontWeight:    style.fontWeight,
+        lineHeight:    style.lineHeight,
+        letterSpacing: style.letterSpacing,
+        textTransform: style.textTransform || 'none',
+        textAlign:     layer.align || 'left',
+        color,
+        overflow:      'hidden',
+        wordBreak:     'break-word',
       }}>
-        {fieldVal}
+        {val}
       </div>
     )
   }
 
+  // ── Image (headshot / logo / badge) ───────────────────────────────
   if (layer.type === 'image') {
     let src = null
-    let shape = layer.shape || 'rect'
+    const shape = layer.shape || 'rect'
 
-    if (layer.slot === 'headshot' && selectedHeadshot) {
-      src = selectedHeadshot.squareUrl
+    if (layer.slot === 'headshot') {
+      // Custom upload takes priority over library selection
+      src = customHeadshotUrl || selectedHeadshot?.squareUrl || null
     } else if (layer.slot === 'logo' && selectedLogo) {
       src = selectedLogo.lightUrl
     } else if (layer.slot === 'badge' && selectedBadge) {
       src = selectedBadge.url
     }
 
-    // Show placeholder when no asset selected
     if (!src) {
+      // Placeholder slot
       return (
         <div style={{
           ...baseStyle,
-          backgroundColor: themeColors.surface === '#181715' ? '#252320' : tokens.colors.surfaceCard,
-          borderRadius: shape === 'circle' ? '50%' : scalePx(8),
-          border: `${Math.max(1, scalePx(1))}px dashed ${tokens.colors.hairline}`,
+          backgroundColor: themeColors.surface === '#181715'
+            ? tokens.colors.surfaceDarkElevated
+            : tokens.colors.surfaceCard,
+          borderRadius: shape === 'circle' ? '50%' : sp(6),
+          border: `${Math.max(1, sp(1))}px dashed ${tokens.colors.hairline}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <svg
-            width={scalePx(24)} height={scalePx(24)}
-            viewBox="0 0 24 24" fill="none"
-            style={{ color: tokens.colors.mutedSoft }}
-          >
+          <svg width={sp(28)} height={sp(28)} viewBox="0 0 28 28" fill="none">
             {layer.slot === 'headshot' ? (
-              <path d="M12 12a4 4 0 100-8 4 4 0 000 8zm0 2c-5 0-8 2.5-8 4.5h16c0-2-3-4.5-8-4.5z" fill="currentColor" opacity="0.4"/>
+              <>
+                <circle cx="14" cy="10" r="5" stroke={tokens.colors.mutedSoft} strokeWidth="1.5"/>
+                <path d="M5 24c0-5 4-9 9-9s9 4 9 9" stroke={tokens.colors.mutedSoft} strokeWidth="1.5" strokeLinecap="round"/>
+              </>
             ) : (
-              <rect x="3" y="7" width="18" height="10" rx="1" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 2"/>
+              <rect x="4" y="8" width="20" height="12" rx="1.5" stroke={tokens.colors.mutedSoft} strokeWidth="1.5" strokeDasharray="3 2"/>
             )}
           </svg>
         </div>
@@ -139,16 +157,55 @@ function CanvasLayer({ layer, scale, themeColors, textFields, selectedHeadshot, 
     return (
       <div style={{
         ...baseStyle,
-        borderRadius: shape === 'circle' ? '50%' : scalePx(4),
+        borderRadius: shape === 'circle' ? '50%' : sp(4),
         overflow: 'hidden',
-        flexShrink: 0,
       }}>
         <img
           src={src}
           alt={layer.slot}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           crossOrigin="anonymous"
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
         />
+      </div>
+    )
+  }
+
+  // ── Brand Logo (inline wordmark) ───────────────────────────────────
+  if (layer.type === 'brandLogo') {
+    const logoColor = layer.color || '#ffffff'
+    const sz = sp(14)
+    const szSm = sp(9)
+    return (
+      <div style={{
+        position: 'absolute',
+        left: sp(layer.x || 60),
+        top:  sp(layer.y || 940),
+        display: 'flex',
+        flexDirection: 'column',
+        gap: sp(2),
+        opacity: 0.92,
+      }}>
+        {/* Monogram icon */}
+        <svg width={sp(32)} height={sp(32)} viewBox="0 0 32 32" fill="none">
+          <rect width="32" height="32" rx="6" fill={logoColor} fillOpacity="0.15"/>
+          <text x="16" y="22" textAnchor="middle"
+            fontFamily={tokens.typography.families.body}
+            fontSize="14" fontWeight="700" fill={logoColor}>
+            NA
+          </text>
+        </svg>
+        {/* Wordmark */}
+        <div style={{
+          fontFamily: tokens.typography.families.body,
+          fontSize: `${szSm}px`,
+          fontWeight: 500,
+          letterSpacing: '1.5px',
+          textTransform: 'uppercase',
+          color: logoColor,
+          opacity: 0.85,
+        }}>
+          Nerd Apply
+        </div>
       </div>
     )
   }
@@ -156,21 +213,25 @@ function CanvasLayer({ layer, scale, themeColors, textFields, selectedHeadshot, 
   return null
 }
 
-export default function CanvasPreview({ template, maxWidth = 480 }) {
-  const { activeTheme, textFields, selectedHeadshot, selectedLogo, selectedBadge } = useEditorStore()
-  const themeColors = tokens.themes[activeTheme] || tokens.themes.cream
+// ─────────────────────────────────────────────────────────────────────────────
 
+export default function CanvasPreview({ template, maxWidth = 480 }) {
+  const {
+    activeTheme, textFields,
+    selectedHeadshot, customHeadshotUrl,
+    selectedLogo, selectedBadge,
+  } = useEditorStore()
+
+  const themeColors = tokens.themes[activeTheme] || tokens.themes.cream
   const { width, height } = template.dimensions
   const scale = maxWidth / width
-  const previewWidth = maxWidth
-  const previewHeight = Math.round(height * scale)
 
   return (
     <div
-      className="canvas-preview-target relative overflow-hidden shadow-lg"
+      className="canvas-preview-target relative overflow-hidden"
       style={{
-        width: previewWidth,
-        height: previewHeight,
+        width:  Math.round(maxWidth),
+        height: Math.round(height * scale),
         backgroundColor: themeColors.surface,
         flexShrink: 0,
       }}
@@ -183,6 +244,7 @@ export default function CanvasPreview({ template, maxWidth = 480 }) {
           themeColors={themeColors}
           textFields={textFields}
           selectedHeadshot={selectedHeadshot}
+          customHeadshotUrl={customHeadshotUrl}
           selectedLogo={selectedLogo}
           selectedBadge={selectedBadge}
         />

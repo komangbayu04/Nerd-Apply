@@ -16,7 +16,7 @@ const formatDimLabel = {
 export default function Editor() {
   const { templateId } = useParams()
   const navigate = useNavigate()
-  const { resetEditor, setSelectedTemplate } = useEditorStore()
+  const { resetEditor, setSelectedTemplate, setActiveTheme } = useEditorStore()
   const [exportOpen, setExportOpen] = useState(false)
   const [previewWidth, setPreviewWidth] = useState(480)
 
@@ -29,6 +29,8 @@ export default function Editor() {
     }
     resetEditor()
     setSelectedTemplate(template)
+    // Apply template's default theme (e.g. coral for Welcome to Team)
+    if (template.defaultTheme) setActiveTheme(template.defaultTheme)
   }, [templateId])
 
   useEffect(() => {
