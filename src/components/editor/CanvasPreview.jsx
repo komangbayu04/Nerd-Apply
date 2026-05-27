@@ -48,7 +48,17 @@ function CanvasLayer({
 
   // ── Background ────────────────────────────────────────────────────
   if (layer.type === 'background') {
-    // fillColor on background layer overrides the theme surface (for custom template colors)
+    // backgroundImage: path to a static image used as the full background
+    if (layer.backgroundImage) {
+      return (
+        <img
+          src={layer.backgroundImage}
+          alt=""
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+        />
+      )
+    }
+    // fillColor overrides the theme surface color
     return (
       <div style={{ position: 'absolute', inset: 0, backgroundColor: layer.fillColor || themeColors.surface }} />
     )

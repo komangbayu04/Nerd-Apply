@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
+  <defs>
+    <filter id="b" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="22"/>
+    </filter>
+  </defs>
+
+  <!-- Base background -->
+  <rect width="1080" height="1080" fill="#FFA800"/>
+
+  <!-- Decorative blurred orange-red rectangles (matching reference image) -->
+
+  <!-- Top-right -->
+  <rect x="640" y="378" width="470" height="128" fill="#FF6200" filter="url(#b)"/>
+
+  <!-- Middle row: two left + one spanning right -->
+  <rect x="-30" y="486" width="182" height="142" fill="#FF6200" filter="url(#b)"/>
+  <rect x="148" y="486" width="238" height="142" fill="#FF6200" filter="url(#b)"/>
+  <rect x="542" y="486" width="568" height="142" fill="#FF6200" filter="url(#b)"/>
+
+  <!-- Lower-middle row -->
+  <rect x="-30" y="596" width="182" height="142" fill="#FF6200" filter="url(#b)"/>
+  <rect x="148" y="676" width="420" height="142" fill="#FF6200" filter="url(#b)"/>
+
+  <!-- Bottom-left row -->
+  <rect x="-30" y="706" width="268" height="138" fill="#FF6200" filter="url(#b)"/>
+  <rect x="-30" y="808" width="268" height="138" fill="#FF6200" filter="url(#b)"/>
+</svg>
