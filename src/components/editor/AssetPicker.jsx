@@ -1,5 +1,4 @@
 import React, { useState, useRef } from 'react'
-import { removeBackground } from '@imgly/background-removal'
 import { assetLibrary } from '../../assets/assetLibrary.js'
 import useEditorStore from '../../store/editorStore.js'
 
@@ -48,117 +47,45 @@ function AssetItem({ url, label, sublabel, isSelected, onClick, shape = 'rect' }
   )
 }
 
-// ── AI Photo Upload Zone ────────────────────────────────────────────────────────
-// Automatically removes background from uploaded photo using @imgly/background-removal
-// (runs fully client-side via WebAssembly/ONNX — no API key or server needed)
+// ── Photo Upload Zone ──────────────────────────────────────────────────────────
 function PhotoUpload({ customHeadshotUrl, onUpload, onClear }) {
   const inputRef = useRef(null)
   const [dragging, setDragging] = useState(false)
-  const [processing, setProcessing] = useState(false)
-  const [progress, setProgress] = useState({ step: '', pct: 0 })
 
-  async function handleFile(file) {
+  function handleFile(file) {
     if (!file || !file.type.startsWith('image/')) return
-
-    setProcessing(true)
-    setProgress({ step: 'Loading AI model…', pct: 0 })
-
-    try {
-      const blob = await removeBackground(file, {
-        model: 'small',         // ~30 MB model, cached after first download
-        output: { format: 'image/png', quality: 0.9 },
-        progress: (key, current, total) => {
-          const pct = total > 0 ? Math.round((current / total) * 100) : 0
-          if (key.startsWith('fetch')) {
-            setProgress({ step: `Downloading AI model ${pct}%`, pct })
-          } else {
-            setProgress({ step: `Removing background ${pct}%`, pct })
-          }
-        },
-      })
-      const url = URL.createObjectURL(blob)
-      onUpload(url)
-    } catch (err) {
-      console.warn('Background removal failed — using original photo:', err)
-      // Graceful fallback: use photo as-is
-      onUpload(URL.createObjectURL(file))
-    } finally {
-      setProcessing(false)
-      setProgress({ step: '', pct: 0 })
-    }
+    onUpload(URL.createObjectURL(file))
   }
 
   function handleDrop(e) {
-    e.preventDefault(); setDragging(false)
+    e.preventDefault()
+    setDragging(false)
     handleFile(e.dataTransfer.files[0])
   }
 
-  // ── Processing overlay ────────────────────────────────────────────
-  if (processing) {
-    return (
-      <div className="rounded-xl border-2 border-primary bg-surfaceSoft p-5 flex flex-col items-center gap-3">
-        {/* Animated spinner */}
-        <svg className="animate-spin" width="28" height="28" viewBox="0 0 28 28" fill="none">
-          <circle cx="14" cy="14" r="11" stroke="#e6dfd8" strokeWidth="3"/>
-          <path d="M14 3a11 11 0 0 1 11 11" stroke="#cc785c" strokeWidth="3" strokeLinecap="round"/>
-        </svg>
-        <div className="text-center">
-          <p className="font-body text-sm font-medium text-ink">{progress.step || 'Processing…'}</p>
-          <p className="font-body text-xs text-muted mt-0.5">First-time download ~30 MB · cached after</p>
-        </div>
-        {/* Progress bar */}
-        {progress.pct > 0 && (
-          <div className="w-full h-1.5 rounded-full bg-hairline overflow-hidden">
-            <div
-              className="h-full rounded-full bg-primary transition-all duration-300"
-              style={{ width: `${progress.pct}%` }}
-            />
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  // ── Preview of processed photo ─────────────────────────────────────
   if (customHeadshotUrl) {
     return (
       <div className="rounded-xl border-2 border-primary overflow-hidden">
-        {/* Checkerboard bg so transparency is visible */}
-        <div
-          className="relative w-full h-44"
-          style={{
-            backgroundImage: 'repeating-conic-gradient(#e8e0d2 0% 25%, #faf9f5 0% 50%)',
-            backgroundSize: '16px 16px',
-          }}
-        >
-          <img
-            src={customHeadshotUrl}
-            alt="Processed"
-            className="w-full h-full object-contain object-top"
-          />
-          {/* Success badge */}
+        <div className="relative w-full h-44 bg-surfaceCard">
+          <img src={customHeadshotUrl} alt="Uploaded" className="w-full h-full object-contain object-top" />
           <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-white/90 rounded-full px-2.5 py-1 shadow-sm">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <circle cx="6" cy="6" r="5" fill="#5db872"/>
               <path d="M3.5 6l2 2 3-3" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            <span className="font-body text-xs font-medium text-ink">Background removed</span>
+            <span className="font-body text-xs font-medium text-ink">Photo ready</span>
           </div>
         </div>
         <div className="p-2 flex justify-between items-center bg-surfaceSoft">
-          <p className="font-body text-xs text-muted">Transparent PNG ready</p>
-          <button
-            onClick={onClear}
-            className="text-xs font-body font-medium text-error hover:underline"
-          >
-            Remove photo
+          <p className="font-body text-xs text-muted">PNG/JPG with transparent background</p>
+          <button onClick={onClear} className="text-xs font-body font-medium text-error hover:underline">
+            Remove
           </button>
         </div>
       </div>
     )
   }
 
-  // ── Upload drop zone ───────────────────────────────────────────────
   return (
     <div>
       <div
@@ -168,7 +95,7 @@ function PhotoUpload({ customHeadshotUrl, onUpload, onClear }) {
         onClick={() => inputRef.current?.click()}
         className={[
           'flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed cursor-pointer transition-all py-7',
-          dragging ? 'border-primary bg-surfaceSoft scale-[0.99]' : 'border-hairline hover:border-primary hover:bg-surfaceSoft',
+          dragging ? 'border-primary bg-surfaceSoft' : 'border-hairline hover:border-primary hover:bg-surfaceSoft',
         ].join(' ')}
       >
         <div className="w-12 h-12 rounded-full bg-surfaceCard flex items-center justify-center">
@@ -179,26 +106,11 @@ function PhotoUpload({ customHeadshotUrl, onUpload, onClear }) {
         </div>
         <div className="text-center px-2">
           <p className="font-body text-sm font-medium text-ink">Upload photo</p>
-          <p className="font-body text-xs text-muted mt-0.5">
-            AI auto-removes background · JPG, PNG, WEBP
-          </p>
-        </div>
-        {/* AI badge */}
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-            <circle cx="5" cy="5" r="4" fill="#cc785c" opacity="0.8"/>
-            <path d="M3 5h4M5 3v4" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
-          </svg>
-          <span className="font-body text-xs font-medium text-primary">AI Background Removal</span>
+          <p className="font-body text-xs text-muted mt-0.5">PNG with transparent background · JPG · WEBP</p>
         </div>
       </div>
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={(e) => handleFile(e.target.files[0])}
-      />
+      <input ref={inputRef} type="file" accept="image/*" className="hidden"
+        onChange={(e) => handleFile(e.target.files[0])} />
     </div>
   )
 }
