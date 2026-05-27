@@ -1,58 +1,73 @@
 export const templates = [
-  // ── Template 1: Welcome to the Team (reference design) ─────────────────────
+  // ── Template 1: Welcome to the Team ────────────────────────────────────────
+  // Designed to match the reference: bright amber BG, large white serif headline
+  // behind a tall portrait photo, geometric darker rects on sides, dark name card BR.
   {
     id: 'social-welcome-team-01',
     name: 'Welcome to the Team',
     format: 'square',
     theme: 'Announcement',
     status: 'active',
-    defaultTheme: 'coral',           // opens in coral callout by default
+    defaultTheme: 'coral',
     dimensions: { width: 1080, height: 1080 },
     themes: ['coral', 'dark', 'cream'],
     layers: [
-      // 1. Full-bleed background (coral from theme)
-      { type: 'background' },
+      // ── 1. Background — bright warm amber (matches reference orange) ───────
+      { type: 'background', fillColor: '#F5A200' },
 
-      // 2. Decorative geometry (slightly darker overlays — visible at edges)
-      { type: 'rect', x: 700, y: 340, w: 380, h: 280,  fillColor: 'rgba(0,0,0,0.14)', locked: true },
-      { type: 'rect', x: 820, y: 200, w: 260, h: 130,  fillColor: 'rgba(0,0,0,0.10)', locked: true },
-      { type: 'rect', x:   0, y: 460, w: 220, h: 380,  fillColor: 'rgba(0,0,0,0.10)', locked: true },
+      // ── 2. Decorative geometry ─────────────────────────────────────────────
+      // LEFT strip rect (visible left of photo, below headline)
+      { type: 'rect', x: 0,   y: 486, w: 142, h: 400, fillColor: '#D08800', locked: true },
+      // RIGHT side rects (partially behind photo, visible right strip)
+      { type: 'rect', x: 734, y: 408, w: 346, h: 270, fillColor: '#D08800', locked: true },
+      { type: 'rect', x: 822, y: 264, w: 258, h: 134, fillColor: '#C07C00', locked: true },
+      // Small accent top-right
+      { type: 'rect', x: 900, y: 174, w: 180, h:  80, fillColor: '#B87200', locked: true },
 
-      // 3. Headline text (white serif, behind headshot in z-order)
+      // ── 3. Headline — huge white serif, drawn BEFORE photo (photo sits on top) ──
+      // "Welcome to the team!" at ~110px fills the canvas width in two bold lines
       {
         type: 'text', field: 'headline',
-        x: 60, y: 52, w: 960,
-        fontStyle: 'displayLg', align: 'left',
-        textColorToken: 'onPrimary',   // always white regardless of theme
+        x: 40, y: 34, w: 1000,
+        fontStyle: 'displayXl',   // serif, weight 400, letter-spacing -1.5px
+        fontSize: 110,             // override: much bigger than the 64px token default
+        align: 'left',
+        textColorToken: 'onPrimary',  // white — always, regardless of theme
         locked: false,
       },
 
-      // 4. Large headshot — takes up most of canvas, sits IN FRONT of headline
-      { type: 'image', slot: 'headshot', x: 210, y: 80, w: 660, h: 1000, shape: 'rect', locked: false },
+      // ── 4. Portrait headshot — tall, centred, covers most of canvas ────────
+      // The photo sits IN FRONT of the headline (z-order: rendered after text)
+      // Top of photo at y=140 so the very top serif letters are visible above
+      { type: 'image', slot: 'headshot', x: 142, y: 140, w: 796, h: 940, shape: 'rect', locked: false },
 
-      // 5. Dark name card (bottom right) — overlaid on headshot
-      { type: 'rect', x: 490, y: 844, w: 550, h: 196, fillColor: 'rgba(24,23,21,0.92)', radius: 0, locked: true },
+      // ── 5. Dark name card (bottom-right, extends to canvas edge) ──────────
+      { type: 'rect', x: 490, y: 836, w: 590, h: 206, fillColor: 'rgba(20,18,16,0.90)', locked: true },
 
-      // 6. Person name on card
+      // ── 6. Person name — large display serif, white ────────────────────────
       {
         type: 'text', field: 'personName',
-        x: 514, y: 870, w: 502,
-        fontStyle: 'displaySm', align: 'left',
+        x: 520, y: 860, w: 538,
+        fontStyle: 'displaySm',   // serif, weight 400, letter-spacing -0.3px
+        fontSize: 50,              // ~50px — big, readable
+        align: 'left',
         textColorToken: 'onDark',
         locked: false,
       },
 
-      // 7. Person role on card
+      // ── 7. Person role — Inter, lighter ────────────────────────────────────
       {
         type: 'text', field: 'personRole',
-        x: 514, y: 972, w: 502,
-        fontStyle: 'bodyMd', align: 'left',
+        x: 520, y: 970, w: 538,
+        fontStyle: 'bodyMd',      // Inter 400
+        fontSize: 20,
+        align: 'left',
         textColorToken: 'onDarkSoft',
         locked: false,
       },
 
-      // 8. Brand logo — bottom left, white
-      { type: 'brandLogo', x: 56, y: 920, color: '#ffffff', locked: true },
+      // ── 8. Brand logo — bottom-left, white ─────────────────────────────────
+      { type: 'brandLogo', x: 46, y: 908, color: '#ffffff', locked: true },
     ],
   },
 

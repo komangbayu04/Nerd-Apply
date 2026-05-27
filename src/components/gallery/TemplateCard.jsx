@@ -18,113 +18,92 @@ const themeVariant = {
 }
 
 function PreviewArea({ template }) {
-  const themeKey = template.themes[0] || 'cream'
-  const themeColors = tokens.themes[themeKey]
+  const themeKey = template.defaultTheme || template.themes[0] || 'cream'
+  const themeColors = tokens.themes[themeKey] || tokens.themes.cream
   const { width, height } = template.dimensions
   const aspectRatio = width / height
 
-  // Determine preview background
-  let bgColor = themeColors.surface
-  // Check if template has primary rect at top (flyer-partner-01)
-  const topRect = template.layers.find(
-    (l) => l.type === 'rect' && l.y === 0 && l.colorToken === 'primary'
-  )
+  // Background: use layer fillColor if present, else theme surface
+  const bgLayer = template.layers.find((l) => l.type === 'background')
+  const bgColor = bgLayer?.fillColor || themeColors.surface
+
   const hasHeadshot = template.layers.some((l) => l.type === 'image' && l.slot === 'headshot')
   const hasLogo = template.layers.some((l) => l.type === 'image' && l.slot === 'logo')
+  const hasBrandLogo = template.layers.some((l) => l.type === 'brandLogo')
+  const topRect = template.layers.find((l) => l.type === 'rect' && l.y === 0 && l.colorToken === 'primary')
+  const hasNameCard = template.layers.some((l) => l.type === 'rect' && l.fillColor?.startsWith('rgba(20'))
+
+  // Detect geometric decor rects (welcome-to-team style)
+  const decorRects = template.layers.filter((l) => l.type === 'rect' && l.fillColor && l.fillColor.startsWith('#') && l.locked)
+
+  const headlineColor = themeColors.headline === '#141413' ? '#141413' : '#ffffff'
 
   return (
     <div
-      className="w-full rounded-lg overflow-hidden relative flex items-end"
-      style={{
-        aspectRatio: `${aspectRatio}`,
-        background: bgColor,
-        maxHeight: '220px',
-      }}
+      className="w-full rounded-lg overflow-hidden relative"
+      style={{ aspectRatio: `${aspectRatio}`, background: bgColor, maxHeight: '220px' }}
     >
-      {/* Top accent bar */}
+      {/* Coral header band for flyer-partner */}
       {topRect && (
-        <div
-          className="absolute top-0 left-0 right-0"
-          style={{ height: '18%', backgroundColor: tokens.colors.primary }}
-        />
+        <div className="absolute top-0 left-0 right-0" style={{ height: '18%', backgroundColor: tokens.colors.primary }} />
       )}
-      {/* Simulated content lines */}
-      <div className="absolute inset-0 p-4 flex flex-col justify-center gap-2">
-        {/* Headline bar */}
-        <div
-          className="rounded"
-          style={{
-            height: '8px',
-            width: '75%',
-            backgroundColor: themeColors.headline,
-            opacity: 0.7,
-          }}
-        />
-        <div
-          className="rounded"
-          style={{
-            height: '8px',
-            width: '55%',
-            backgroundColor: themeColors.headline,
-            opacity: 0.7,
-          }}
-        />
-        {/* Subheadline */}
-        <div
-          className="rounded mt-1"
-          style={{
-            height: '5px',
-            width: '60%',
-            backgroundColor: themeColors.body,
-            opacity: 0.4,
-          }}
-        />
-        <div
-          className="rounded"
-          style={{
-            height: '5px',
-            width: '45%',
-            backgroundColor: themeColors.body,
-            opacity: 0.4,
-          }}
-        />
+
+      {/* Decorative geometry rects (welcome-to-team style) */}
+      {decorRects.slice(0, 4).map((r, i) => (
+        <div key={i} className="absolute" style={{
+          left: `${(r.x / width) * 100}%`,
+          top: `${(r.y / height) * 100}%`,
+          width: `${(r.w / width) * 100}%`,
+          height: `${(r.h / height) * 100}%`,
+          backgroundColor: r.fillColor,
+        }} />
+      ))}
+
+      {/* Headline text bars */}
+      <div className="absolute p-3 flex flex-col gap-1.5" style={{ top: '6%', left: '4%', width: '88%' }}>
+        <div className="rounded" style={{ height: template.id === 'social-welcome-team-01' ? '11px' : '7px', width: '80%', backgroundColor: headlineColor, opacity: 0.85 }} />
+        <div className="rounded" style={{ height: template.id === 'social-welcome-team-01' ? '11px' : '7px', width: '65%', backgroundColor: headlineColor, opacity: 0.85 }} />
       </div>
-      {/* Headshot placeholder */}
+
+      {/* Portrait headshot placeholder */}
       {hasHeadshot && (
-        <div
-          className="absolute rounded-full border-2"
-          style={{
-            width: '28%',
-            height: aspectRatio > 1 ? '38%' : '22%',
-            right: '8%',
-            top: '8%',
-            backgroundColor: tokens.colors.surfaceCard,
-            borderColor: tokens.colors.hairline,
-          }}
-        />
+        <div className="absolute rounded overflow-hidden" style={{
+          left: '13%', top: '13%',
+          width: '74%', height: '87%',
+          backgroundColor: 'rgba(0,0,0,0.15)',
+        }}>
+          <div className="w-full h-full flex items-center justify-center">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" opacity="0.4">
+              <circle cx="14" cy="10" r="5" stroke="#fff" strokeWidth="1.5"/>
+              <path d="M5 24c0-5 4-9 9-9s9 4 9 9" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </div>
+        </div>
       )}
+
       {/* Logo placeholder */}
       {hasLogo && !topRect && (
-        <div
-          className="absolute rounded"
-          style={{
-            width: '30%',
-            height: '12%',
-            left: '7%',
-            top: '7%',
-            backgroundColor: tokens.colors.surfaceCreamStrong,
-          }}
-        />
+        <div className="absolute rounded" style={{ width: '28%', height: '10%', left: '7%', top: '7%', backgroundColor: tokens.colors.surfaceCreamStrong }} />
       )}
-      {/* Format label overlay */}
-      <div
-        className="absolute bottom-2 right-2 text-xs font-body font-medium px-2 py-0.5 rounded"
-        style={{
-          backgroundColor: 'rgba(0,0,0,0.35)',
-          color: '#ffffff',
-          fontSize: '10px',
-        }}
-      >
+
+      {/* Dark name card */}
+      {hasNameCard && (
+        <div className="absolute rounded-sm" style={{
+          left: '45%', bottom: '0', right: '0', height: '22%',
+          backgroundColor: 'rgba(20,18,16,0.90)',
+        }} />
+      )}
+
+      {/* Brand logo dot */}
+      {hasBrandLogo && (
+        <div className="absolute" style={{ left: '4%', bottom: '8%' }}>
+          <div style={{ width: 14, height: 14, backgroundColor: '#ffffff', opacity: 0.8, borderRadius: 3 }} />
+        </div>
+      )}
+
+      {/* Format label */}
+      <div className="absolute bottom-2 right-2 font-body font-medium px-2 py-0.5 rounded"
+        style={{ backgroundColor: 'rgba(0,0,0,0.35)', color: '#fff', fontSize: '9px' }}>
         {formatLabels[template.format] || template.format}
       </div>
     </div>

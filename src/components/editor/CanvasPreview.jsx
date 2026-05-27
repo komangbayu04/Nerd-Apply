@@ -48,8 +48,9 @@ function CanvasLayer({
 
   // ── Background ────────────────────────────────────────────────────
   if (layer.type === 'background') {
+    // fillColor on background layer overrides the theme surface (for custom template colors)
     return (
-      <div style={{ position: 'absolute', inset: 0, backgroundColor: themeColors.surface }} />
+      <div style={{ position: 'absolute', inset: 0, backgroundColor: layer.fillColor || themeColors.surface }} />
     )
   }
 
@@ -95,11 +96,14 @@ function CanvasLayer({
       color = resolveColor(layer.textColorToken, themeColors)
     }
 
+    // layer.fontSize overrides the token size (used for custom large/small text)
+    const baseFontSize = layer.fontSize !== undefined ? layer.fontSize : style.fontSize
+
     return (
       <div style={{
         ...baseStyle,
         fontFamily:    style.fontFamily,
-        fontSize:      `${style.fontSize * scale}px`,
+        fontSize:      `${baseFontSize * scale}px`,
         fontWeight:    style.fontWeight,
         lineHeight:    style.lineHeight,
         letterSpacing: style.letterSpacing,
@@ -170,35 +174,37 @@ function CanvasLayer({
     )
   }
 
-  // ── Brand Logo (inline wordmark) ───────────────────────────────────
+  // ── Brand Logo (inline wordmark — styled like reference "pq" logo) ──────────
   if (layer.type === 'brandLogo') {
     const logoColor = layer.color || '#ffffff'
-    const sz = sp(14)
-    const szSm = sp(9)
+    // Icon is ~50px tall at full canvas scale; scales proportionally
+    const iconSize = sp(52)
+    const wordSize = sp(11)
     return (
       <div style={{
         position: 'absolute',
-        left: sp(layer.x || 60),
-        top:  sp(layer.y || 940),
+        left: sp(layer.x || 46),
+        top:  sp(layer.y || 908),
         display: 'flex',
         flexDirection: 'column',
-        gap: sp(2),
-        opacity: 0.92,
+        alignItems: 'flex-start',
+        gap: sp(3),
       }}>
-        {/* Monogram icon */}
-        <svg width={sp(32)} height={sp(32)} viewBox="0 0 32 32" fill="none">
-          <rect width="32" height="32" rx="6" fill={logoColor} fillOpacity="0.15"/>
-          <text x="16" y="22" textAnchor="middle"
-            fontFamily={tokens.typography.families.body}
-            fontSize="14" fontWeight="700" fill={logoColor}>
-            NA
-          </text>
+        {/* Square icon — "NA" monogram, similar to pq logomark in reference */}
+        <svg width={iconSize} height={iconSize} viewBox="0 0 52 52" fill="none">
+          {/* Two overlapping rounded squares like the reference "p" and "q" */}
+          <rect x="2"  y="2"  width="26" height="26" rx="5" fill={logoColor} fillOpacity="0.95"/>
+          <rect x="24" y="24" width="26" height="26" rx="5" fill={logoColor} fillOpacity="0.95"/>
+          {/* N letter */}
+          <text x="11" y="20" fontFamily="sans-serif" fontSize="16" fontWeight="800" fill={layer.color === '#ffffff' ? '#F5A200' : '#fff'} textAnchor="middle">N</text>
+          {/* A letter */}
+          <text x="37" y="47" fontFamily="sans-serif" fontSize="16" fontWeight="800" fill={layer.color === '#ffffff' ? '#F5A200' : '#fff'} textAnchor="middle">A</text>
         </svg>
-        {/* Wordmark */}
+        {/* Wordmark text */}
         <div style={{
           fontFamily: tokens.typography.families.body,
-          fontSize: `${szSm}px`,
-          fontWeight: 500,
+          fontSize: `${wordSize}px`,
+          fontWeight: 600,
           letterSpacing: '1.5px',
           textTransform: 'uppercase',
           color: logoColor,
